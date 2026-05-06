@@ -1,4 +1,8 @@
-
+"""
+SEN'EAU — Plateforme de gestion
+Lancer : python seneau.py -> http://localhost:5000
+Comptes : admin/admin2026 | superviseur/super2026 | moussa,ibou,awa,oumar/agent2026
+"""
 import sqlite3, os, io, datetime, hashlib
 from functools import wraps
 from flask import Flask, render_template_string, request, jsonify, send_file, session, redirect
@@ -15,8 +19,10 @@ except ImportError:
     PDF_OK = False
 
 app = Flask(__name__)
-app.secret_key = 'seneau_2026_secret_key'
-DB = "seneau.db"
+app.secret_key = os.environ.get('SECRET_KEY', 'seneau_2026_secret_key_change_me')
+# Sur Render, utiliser /tmp ou la variable d'env DATABASE_PATH
+_default_db = os.path.join(os.environ.get('DATA_DIR', '/tmp'), 'seneau.db') if os.environ.get('RENDER') else 'seneau.db'
+DB = os.environ.get('DATABASE_PATH', _default_db)
 
 # ═══════════════════════════════════════════════════════════
 #  HELPERS
@@ -223,7 +229,7 @@ input:focus{border-color:#8DC63F;box-shadow:0 0 0 3px rgba(141,198,63,.12)}
 .rb{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase}
 .rba{background:#fff3cd;color:#7a5000}.rbs{background:#e8f5d0;color:#3a6010}.rbg{background:#e6edf7;color:#1B3A6B}
 </style></head>
-<body>
+<body class="login-page">
 <div class="left">
   <div class="hero-logo">
     <div class="hero-sq">
@@ -424,7 +430,68 @@ textarea{resize:vertical;min-height:80px}
 .inv-barcode{font-size:18px;letter-spacing:3px;color:var(--nv);margin-top:5px}
 .inv-hist{display:flex;align-items:flex-end;gap:4px;height:50px;margin-top:6px}
 .inv-bar-lbl{font-size:8px;color:var(--g4);margin-top:3px;text-align:center;display:block}
-@media(max-width:900px){.sg{grid-template-columns:1fr 1fr}.g2c,.geq{grid-template-columns:1fr}.fg{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .sg{grid-template-columns:1fr 1fr}
+  .g2c,.geq{grid-template-columns:1fr}
+  .fg{grid-template-columns:1fr}
+}
+/* ── RESPONSIVE MOBILE ── */
+.hbg{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--nv)}
+.hbg span{display:block;width:22px;height:2px;background:currentColor;margin:4px 0;border-radius:2px;transition:all .3s}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(16,35,71,.5);z-index:99}
+@media(max-width:768px){
+  html,body{overflow:auto}
+  #sh{flex-direction:column;height:auto;min-height:100vh}
+  #sb{position:fixed;left:-260px;top:0;bottom:0;width:260px;z-index:100;transition:left .28s cubic-bezier(.4,0,.2,1);height:100vh;overflow-y:auto}
+  #sb.open{left:0}
+  .sb-ov.open{display:block}
+  #mn{height:auto;min-height:100vh;overflow:visible}
+  #ct{overflow:visible;padding:16px 14px;height:auto}
+  header{padding:0 14px;position:sticky;top:0;z-index:50}
+  .hbg{display:flex;flex-direction:column;justify-content:center;margin-right:8px}
+  .htitle{font-size:14px}
+  .hsub{display:none}
+  .btn.bsm{padding:5px 8px;font-size:10px}
+  header .btn{display:none}
+  .sg{grid-template-columns:1fr 1fr}
+  .sc{padding:14px 12px}
+  .sc-val{font-size:22px}
+  .card{border-radius:6px}
+  .ch{flex-wrap:wrap;gap:6px;padding:10px 14px}
+  .cb{padding:12px 10px}
+  .ph{flex-direction:column;gap:10px;align-items:flex-start}
+  .ph button{width:100%}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:520px;font-size:12px}
+  .modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;margin:10px}
+  .ov{padding:10px;align-items:flex-start;padding-top:60px}
+  .mb{padding:14px 16px}
+  .mf{padding:10px 16px}
+  .fg{grid-template-columns:1fr}
+  .fl.full{grid-column:1/-1}
+  #footer{flex-direction:column;gap:10px;padding:12px 16px;text-align:center}
+  .tags{gap:4px}
+  .tag{padding:4px 10px;font-size:10px}
+  .geq{grid-template-columns:1fr}
+  .g2c{grid-template-columns:1fr}
+  .sb2{flex-direction:column;align-items:stretch}
+  .sb2 input,.sb2 select{width:100%!important}
+  .pager{padding:8px 14px}
+  .bc{height:70px;gap:4px}
+}
+@media(max-width:400px){
+  .sg{grid-template-columns:1fr}
+  .sc-val{font-size:20px}
+}
+/* ── LOGIN RESPONSIVE ── */
+@media(max-width:860px){
+  body.login-page{flex-direction:column;overflow:auto;min-height:100vh}
+  body.login-page .left{flex:none;min-height:auto;padding:28px 24px 20px}
+  body.login-page .stats{display:none}
+  body.login-page .hero-title{font-size:20px;margin-bottom:8px}
+  body.login-page .hero-desc{display:none}
+  body.login-page .right{width:100%;padding:24px 20px 32px}
+}
 </style>
 """
 
@@ -483,8 +550,9 @@ AGENT_HTML = """
   </nav>
   <div class="sfoot"><a href="/logout" class="logout"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Deconnexion</a></div>
 </div>
+<div class="sb-ov" id="sb-ov" onclick="closeSb()"></div>
 <div id="mn">
-  <header><div class="htitle" id="h-title">Tableau de bord<span class="hsub" id="h-sub"></span></div></header>
+  <header><button class="hbg" onclick="toggleSb()" aria-label="Menu"><span></span><span></span><span></span></button><div class="htitle" id="h-title">Tableau de bord<span class="hsub" id="h-sub"></span></div></header>
   <div id="ct">
 
     <div class="pg on" id="p-accueil">
@@ -729,6 +797,9 @@ async function saveSign(){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{setHSub();initAgent();});
+function toggleSb(){const s=document.getElementById('sb'),o=document.getElementById('sb-ov');s.classList.toggle('open');o.classList.toggle('open');}
+function closeSb(){const s=document.getElementById('sb'),o=document.getElementById('sb-ov');s.classList.remove('open');o.classList.remove('open');}
+document.addEventListener&&document.addEventListener('DOMContentLoaded',()=>{const nis=document.querySelectorAll&&document.querySelectorAll('.ni');if(nis)nis.forEach(n=>n.addEventListener('click',()=>{if(window.innerWidth<=768)closeSb();}));});
 </script>
 </body></html>
 """
@@ -775,8 +846,9 @@ ADMIN_HTML = """
     <a href="/logout" class="logout" style="margin-top:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Deconnexion</a>
   </div>
 </div>
+<div class="sb-ov" id="sb-ov" onclick="closeSb()"></div>
 <div id="mn">
-  <header><div class="htitle" id="h-title">Tableau de bord<span class="hsub" id="h-sub"></span></div><button class="btn bgld bsm" onclick="openNotif()">Notifications</button></header>
+  <header><button class="hbg" onclick="toggleSb()" aria-label="Menu"><span></span><span></span><span></span></button><div class="htitle" id="h-title">Tableau de bord<span class="hsub" id="h-sub"></span></div><button class="btn bgld bsm" onclick="openNotif()">Notif.</button></header>
   <div id="ct">
 
     <div class="pg on" id="p-dashboard">
@@ -793,7 +865,7 @@ ADMIN_HTML = """
     </div>
 
     <div class="pg" id="p-clients">
-      <div class="ph"><div><h1>Clients &amp; Compteurs</h1><p>Gestion complete des abonnes</p></div><button class="btn bp" onclick="om('m-client')">+ Nouveau client</button></div>
+      <div class="ph"><div><h1>Clients &amp; Compteurs</h1><p>Gestion complete des abonnes</p></div><button class="btn bp" onclick="openClientModal()">+ Nouveau client</button></div>
       <div class="sg" id="cl-stats"></div>
       <div class="card">
         <div class="ch"><span class="ct">Liste des clients</span>
@@ -901,7 +973,7 @@ ADMIN_HTML = """
     <div class="fl full"><label>Adresse *</label><textarea id="c-adr"></textarea></div>
     <div class="fl"><label>Zone *</label><select id="c-zone"><option value="">Selectionner...</option></select></div>
     <div class="fl"><label>Type</label><select id="c-type"><option value="particulier">Particulier</option><option value="entreprise">Entreprise</option><option value="administration">Administration</option></select></div>
-    <div class="fl"><label>N Compteur *</label><input id="c-cpt" placeholder="ex: N0300600"></div>
+    <div class="fl"><label>N° Compteur <span style="background:var(--gl);color:var(--gd);font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700">AUTO</span></label><input id="c-cpt" placeholder="Génération automatique..." readonly style="background:var(--lt);cursor:default" title="Numéro généré automatiquement — modifiable si besoin"></div>
     <div class="fl"><label>Index initial (m3)</label><input id="c-idx" type="number" value="0" step="0.001"></div>
   </div></div>
   <div class="mf"><button class="btn bs" onclick="cm('m-client')">Annuler</button><button class="btn bp" onclick="saveClient()">Enregistrer</button></div>
@@ -992,6 +1064,17 @@ async function initAdmin(){
     document.getElementById('btn-tarif').disabled=true;
     document.getElementById('btn-tarif').title='Acces admin uniquement';
   }
+}
+
+function toggleSb(){const s=document.getElementById('sb'),o=document.getElementById('sb-ov');s.classList.toggle('open');o.classList.toggle('open');}
+function closeSb(){const s=document.getElementById('sb'),o=document.getElementById('sb-ov');s.classList.remove('open');o.classList.remove('open');}
+document.querySelectorAll&&document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.ni').forEach(n=>n.addEventListener('click',()=>{if(window.innerWidth<=768)closeSb();}));});
+
+async function openClientModal(){
+  const r=await get('/api/next_compteur');
+  const f=document.getElementById('c-cpt');
+  if(f&&r&&r.numero){f.value=r.numero;f.placeholder=r.numero;}
+  om('m-client');
 }
 
 async function populateSelects(){
@@ -1819,12 +1902,37 @@ def api_notifications():
     notifs.append({"titre":"Systeme operationnel","detail":"Base de donnees SQLite connectee et fonctionnelle","bg":"background:#e8f5d0"})
     return jsonify(notifs)
 
+@app.route('/api/next_compteur')
+@login_required
+def api_next_compteur():
+    """Genere le prochain numero compteur disponible"""
+    db = get_db()
+    count = db.execute("SELECT COUNT(*) FROM compteur").fetchone()[0]
+    db.close()
+    # Format: N + 7 chiffres, ex: N0001001
+    num = f"N{(count + 1):07d}"
+    # Verifier unicite
+    db2 = get_db()
+    while db2.execute("SELECT 1 FROM compteur WHERE numero_compteur=?", (num,)).fetchone():
+        count += 1
+        num = f"N{(count + 1):07d}"
+    db2.close()
+    return jsonify(numero=num)
+
 # ═══════════════════════════════════════════════════════════
+# INITIALISATION AU DEMARRAGE (compatible Gunicorn/Render)
+# ═══════════════════════════════════════════════════════════
+try:
+    init_db()
+except Exception as _e:
+    import traceback
+    traceback.print_exc()
+
 if __name__ == '__main__':
     print("="*60)
     print("  SEN'EAU — Plateforme de Gestion")
     init_db()
     print(f"  Base de donnees : {os.path.abspath(DB)}")
     print(f"  PDF ReportLab  : {'OK' if PDF_OK else 'NON DISPONIBLE (pip install reportlab)'}")
-    print("="*60)
+    
     
