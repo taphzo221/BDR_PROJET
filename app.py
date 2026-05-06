@@ -1,8 +1,4 @@
-"""
-SEN'EAU — Plateforme de gestion
-Lancer : python seneau.py -> http://localhost:5000
-Comptes : admin/admin2026 | superviseur/super2026 | moussa,ibou,awa,oumar/agent2026
-"""
+
 import sqlite3, os, io, datetime, hashlib
 from functools import wraps
 from flask import Flask, render_template_string, request, jsonify, send_file, session, redirect
@@ -1830,12 +1826,5 @@ if __name__ == '__main__':
     init_db()
     print(f"  Base de donnees : {os.path.abspath(DB)}")
     print(f"  PDF ReportLab  : {'OK' if PDF_OK else 'NON DISPONIBLE (pip install reportlab)'}")
-    print("="*60)
-    print("  Comptes disponibles :")
-    print("  admin       / admin2026  -> Interface Admin complete")
-    print("  superviseur / super2026  -> Interface Admin (gestion)")
-    print("  moussa,ibou,awa,oumar / agent2026 -> Interface Agent")
-    print("="*60)
-    print("  Ouvrez http://localhost:5000")
     print("="*60)
     app.run(debug=False, host='0.0.0.0', port=5000)
