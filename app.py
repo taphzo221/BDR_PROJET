@@ -1827,4 +1827,4 @@ if __name__ == '__main__':
     print(f"  Base de donnees : {os.path.abspath(DB)}")
     print(f"  PDF ReportLab  : {'OK' if PDF_OK else 'NON DISPONIBLE (pip install reportlab)'}")
     print("="*60)
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    
